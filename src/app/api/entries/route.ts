@@ -1,11 +1,11 @@
-import { createTimeEntry, readDB, deleteTimeEntry } from '@/lib/db-supabase';
+import { createTimeEntry, getTimeEntries, deleteTimeEntry } from '@/lib/db-supabase';
 import { TimeEntry } from '@/types';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const db = await readDB();
-    return NextResponse.json(db.timeEntries);
+    const entries = await getTimeEntries();
+    return NextResponse.json(entries);
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to fetch time entries: ${error instanceof Error ? error.message : 'Unknown error'}` },

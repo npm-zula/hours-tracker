@@ -1,11 +1,11 @@
-import { createProject, readDB, deleteProject } from '@/lib/db-supabase';
+import { createProject, getProjects, deleteProject } from '@/lib/db-supabase';
 import { Project } from '@/types';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const db = await readDB();
-    return NextResponse.json(db.projects);
+    const projects = await getProjects();
+    return NextResponse.json(projects);
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to fetch projects: ${error instanceof Error ? error.message : 'Unknown error'}` },

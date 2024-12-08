@@ -1,57 +1,39 @@
-import { DatabaseStructure, Project, TimeEntry } from '@/types';
+import { Project, TimeEntry } from '@/types';
 import { supabase } from './supabase';
 import { generateId } from './utils';
 
-export async function readDB(): Promise<DatabaseStructure> {
-  try {
-    const [projectsResult, timeEntriesResult] = await Promise.all([
-      supabase.from('projects').select('*'),
-      supabase.from('time_entries').select('*')
-    ]);
+export async function getProjects(): Promise<Project[]> {
+  const { data, error } = await supabase.from('projects').select('*');
 
-    if (projectsResult.error) throw projectsResult.error;
-    if (timeEntriesResult.error) throw timeEntriesResult.error;
+  if (error) throw error;
 
-    // Convert from snake_case to camelCase
-    const projects: Project[] = projectsResult.data.map(p => ({
-      id: p.id,
-      name: p.name,
-      hourlyRate: p.hourly_rate,
-      color: p.color,
-      createdAt: p.created_at
-    }));
-
-    const timeEntries: TimeEntry[] = timeEntriesResult.data.map(t => ({
-      id: t.id,
-      projectId: t.project_id,
-      startTime: t.start_time,
-      endTime: t.end_time,
-      description: t.description,
-      isAutomatic: t.is_automatic,
-      createdAt: t.created_at
-    }));
-
-    return {
-      projects,
-      timeEntries,
-      weeklyTotals: [], // This is computed on the fly now
-      lastUpdated: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error('Error reading from Supabase:', error);
-    throw error;
-  }
+  return data.map(p => ({
+    id: p.id,
+    name: p.name,
+    hourlyRate: p.hourly_rate,
+    color: p.color,
+    createdAt: p.created_at
+  }));
 }
 
-export async function writeDB(data: DatabaseStructure): Promise<void> {
-  try {
-    // We don't actually write the entire DB at once anymore
-    // This is kept for compatibility with the old API
-    console.warn('writeDB is deprecated with Supabase. Use specific operations instead.');
-  } catch (error) {
-    console.error('Error writing to Supabase:', error);
-    throw error;
-  }
+export async function getTimeEntries(): Promise<TimeEntry[]> {
+  const { data, error } = await supabase.from('time_entries').select('*');
+
+  if (error) throw error;
+
+  return data.map(t => ({
+    id: t.id,
+    projectId: t.project_id,
+    startTime: t.start_time,
+    endTime: t.end_time,
+    description: t.description,
+    isAutomatic: t.is_automatic,
+    createdAt: t.created_at
+  }));
+}
+
+export async function writeDB(): Promise<void> {
+  console.warn('writeDB is deprecated with Supabase. Use specific operations instead.');
 }
 
 export async function createProject(project: Omit<Project, 'id' | 'createdAt'>): Promise<Project> {

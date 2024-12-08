@@ -21,11 +21,4 @@ export interface WeeklyTotal {
   totalHours: number;
   totalEarnings: number;
   weekStartDate: string;
-}
-
-export interface DatabaseStructure {
-  timeEntries: TimeEntry[];
-  projects: Project[];
-  weeklyTotals: WeeklyTotal[];
-  lastUpdated: string;
 } 
