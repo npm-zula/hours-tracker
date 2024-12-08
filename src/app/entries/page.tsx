@@ -3,27 +3,13 @@ import { ClockIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { differenceInHours } from 'date-fns';
 import Link from 'next/link';
 import { TimeEntry, Project } from '@/types';
-
-async function getData() {
-  const [entriesRes, projectsRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/entries`, { cache: 'no-store' }),
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, { cache: 'no-store' })
-  ]);
-
-  if (!entriesRes.ok || !projectsRes.ok) {
-    throw new Error('Failed to fetch data');
-  }
-
-  const [timeEntries, projects] = await Promise.all([
-    entriesRes.json() as Promise<TimeEntry[]>,
-    projectsRes.json() as Promise<Project[]>
-  ]);
-
-  return { timeEntries, projects };
-}
+import { getTimeEntries, getProjects } from '@/lib/db-supabase';
 
 export default async function EntriesPage() {
-  const { timeEntries, projects } = await getData();
+  const [timeEntries, projects] = await Promise.all([
+    getTimeEntries(),
+    getProjects()
+  ]);
 
   const sortedEntries = [...timeEntries].sort(
     (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()

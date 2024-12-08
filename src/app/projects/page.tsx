@@ -2,14 +2,7 @@ import { formatCurrency } from '@/lib/utils';
 import { BriefcaseIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { Project } from '@/types';
-
-async function getProjects() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
-    cache: 'no-store'
-  });
-  if (!res.ok) throw new Error('Failed to fetch projects');
-  return res.json() as Promise<Project[]>;
-}
+import { getProjects } from '@/lib/db-supabase';
 
 export default async function ProjectsPage() {
   const projects = await getProjects();

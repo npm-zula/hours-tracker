@@ -39,10 +39,13 @@ export async function writeDB(): Promise<void> {
 export async function createProject(project: Omit<Project, 'id' | 'createdAt'>): Promise<Project> {
   const newProject = {
     id: generateId(),
-    ...project,
-    created_at: new Date().toISOString(),
-    hourly_rate: project.hourlyRate
+    name: project.name,
+    hourly_rate: project.hourlyRate,
+    color: project.color,
+    created_at: new Date().toISOString()
   };
+
+  console.log('Attempting to create project:', newProject);
 
   const { data, error } = await supabase
     .from('projects')
@@ -50,7 +53,19 @@ export async function createProject(project: Omit<Project, 'id' | 'createdAt'>):
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Supabase error creating project:', {
+      error,
+      project: newProject
+    });
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('No data returned from Supabase after project creation');
+  }
+
+  console.log('Project created successfully:', data);
 
   return {
     id: data.id,
@@ -64,13 +79,15 @@ export async function createProject(project: Omit<Project, 'id' | 'createdAt'>):
 export async function createTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt'>): Promise<TimeEntry> {
   const newEntry = {
     id: generateId(),
-    ...entry,
-    created_at: new Date().toISOString(),
     project_id: entry.projectId,
     start_time: entry.startTime,
     end_time: entry.endTime,
-    is_automatic: entry.isAutomatic
+    description: entry.description || '',
+    is_automatic: entry.isAutomatic || false,
+    created_at: new Date().toISOString()
   };
+
+  console.log('Attempting to create time entry:', newEntry);
 
   const { data, error } = await supabase
     .from('time_entries')
@@ -78,7 +95,19 @@ export async function createTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt'>
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Supabase error creating time entry:', {
+      error,
+      entry: newEntry
+    });
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('No data returned from Supabase after time entry creation');
+  }
+
+  console.log('Time entry created successfully:', data);
 
   return {
     id: data.id,
