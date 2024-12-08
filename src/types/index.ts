@@ -4,28 +4,28 @@ export interface TimeEntry {
   startTime: string;
   endTime: string;
   description: string;
-  tags: string[];
+  isAutomatic: boolean;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface Project {
   id: string;
   name: string;
+  hourlyRate: number;
   color: string;
-  hourlyRate?: number;
   createdAt: string;
-  updatedAt: string;
 }
 
-export interface Toast {
-  id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  message: string;
-  duration?: number;
+export interface WeeklyTotal {
+  projectId: string;
+  totalHours: number;
+  totalEarnings: number;
+  weekStartDate: string;
 }
 
-export interface Database {
+export interface DatabaseStructure {
   timeEntries: TimeEntry[];
   projects: Project[];
+  weeklyTotals: WeeklyTotal[];
+  lastUpdated: string;
 } 

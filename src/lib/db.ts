@@ -1,130 +1,73 @@
-import { kv } from '@vercel/kv';
-import type { Database, Project, TimeEntry } from './types';
+'use server';
 
-const defaultDb: Database = {
+import fs from 'fs';
+import path from 'path';
+import CryptoJS from 'crypto-js';
+import { DatabaseStructure } from '@/types';
+
+// Use /tmp in production, local data directory in development
+const DATA_DIR = process.env.NODE_ENV === 'production' 
+  ? '/tmp'
+  : path.join(process.cwd(), 'data');
+const DB_FILE = path.join(DATA_DIR, 'timetracker.db');
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
+
+const initializeDB = (): DatabaseStructure => ({
   timeEntries: [],
-  projects: []
-};
+  projects: [],
+  weeklyTotals: [],
+  lastUpdated: new Date().toISOString(),
+});
 
-// Helper to check if we're in development mode
-const isDev = process.env.NODE_ENV === 'development';
-
-// Local storage fallback for development
-function getLocalDb(): Database {
-  if (typeof window === 'undefined') return defaultDb;
-  const data = localStorage.getItem('hours-tracker-db');
-  if (!data) {
-    setLocalDb(defaultDb);
-    return defaultDb;
-  }
-  return JSON.parse(data);
-}
-
-function setLocalDb(db: Database): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('hours-tracker-db', JSON.stringify(db));
-}
-
-// Main database functions
-export async function getDb(): Promise<Database> {
+export async function readDB(): Promise<DatabaseStructure> {
   try {
-    if (isDev) return getLocalDb();
-    
-    const db = await kv.get<Database>('db');
-    if (!db) {
-      await setDb(defaultDb);
-      return defaultDb;
+    // Create data directory if it doesn't exist
+    if (!fs.existsSync(DATA_DIR)) {
+      await fs.promises.mkdir(DATA_DIR, { recursive: true });
     }
-    return db;
+
+    if (!fs.existsSync(DB_FILE)) {
+      const initialData = initializeDB();
+      const encrypted = CryptoJS.AES.encrypt(
+        JSON.stringify(initialData),
+        ENCRYPTION_KEY
+      ).toString();
+      await fs.promises.writeFile(DB_FILE, encrypted);
+      return initialData;
+    }
+
+    const encrypted = await fs.promises.readFile(DB_FILE, 'utf-8');
+    const decrypted = CryptoJS.AES.decrypt(encrypted, ENCRYPTION_KEY).toString(
+      CryptoJS.enc.Utf8
+    );
+    return JSON.parse(decrypted);
   } catch (error) {
-    console.error('Error getting database:', error);
-    return defaultDb;
+    console.error('Error reading database:', error);
+    return initializeDB();
   }
 }
 
-export async function setDb(db: Database): Promise<void> {
+export async function writeDB(data: DatabaseStructure): Promise<void> {
   try {
-    if (isDev) {
-      setLocalDb(db);
-      return;
+    // Ensure data directory exists
+    if (!fs.existsSync(DATA_DIR)) {
+      await fs.promises.mkdir(DATA_DIR, { recursive: true });
     }
-    
-    await kv.set('db', db);
+
+    const encrypted = CryptoJS.AES.encrypt(
+      JSON.stringify(data),
+      ENCRYPTION_KEY
+    ).toString();
+    await fs.promises.writeFile(DB_FILE, encrypted);
   } catch (error) {
-    console.error('Error setting database:', error);
+    console.error('Error writing to database:', error);
   }
 }
 
-export async function addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Promise<Project> {
-  const db = await getDb();
-  const newProject: Project = {
-    ...project,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  db.projects.push(newProject);
-  await setDb(db);
-  return newProject;
-}
-
-export async function addTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<TimeEntry> {
-  const db = await getDb();
-  const newEntry: TimeEntry = {
-    ...entry,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  db.timeEntries.push(newEntry);
-  await setDb(db);
-  return newEntry;
-}
-
-export async function getProjects(): Promise<Project[]> {
-  const db = await getDb();
-  return db.projects;
-}
-
-export async function getTimeEntries(): Promise<TimeEntry[]> {
-  const db = await getDb();
-  return db.timeEntries;
-}
-
-export async function updateTimeEntry(id: string, updates: Partial<TimeEntry>): Promise<TimeEntry | null> {
-  const db = await getDb();
-  const index = db.timeEntries.findIndex(entry => entry.id === id);
-  
-  if (index === -1) return null;
-  
-  db.timeEntries[index] = {
-    ...db.timeEntries[index],
-    ...updates,
-    updatedAt: new Date().toISOString()
-  };
-  
-  await setDb(db);
-  return db.timeEntries[index];
-}
-
-export async function deleteTimeEntry(id: string): Promise<boolean> {
-  const db = await getDb();
-  const index = db.timeEntries.findIndex(entry => entry.id === id);
-  
-  if (index === -1) return false;
-  
-  db.timeEntries.splice(index, 1);
-  await setDb(db);
-  return true;
-}
-
-export function calculateTotalHours(entries: TimeEntry[]): number {
-  return entries.reduce((total, entry) => {
-    const start = new Date(entry.startTime);
-    const end = new Date(entry.endTime);
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    return total + hours;
-  }, 0);
+export async function updateDB(
+  updater: (currentData: DatabaseStructure) => DatabaseStructure
+): Promise<void> {
+  const currentData = await readDB();
+  const newData = updater(currentData);
+  await writeDB(newData);
 } 
