@@ -1,4 +1,4 @@
-import { readDB, writeDB } from '@/lib/db';
+import { createProject, readDB, deleteProject } from '@/lib/db-supabase';
 import { Project } from '@/types';
 import { NextResponse } from 'next/server';
 
@@ -16,8 +16,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const newProject: Project = await request.json();
-    const db = await readDB();
+    const newProject: Omit<Project, 'id' | 'createdAt'> = await request.json();
 
     // Validate project data
     if (!newProject.name || !newProject.hourlyRate || !newProject.color) {
@@ -27,11 +26,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add the new project
-    db.projects.push(newProject);
-    await writeDB(db);
-
-    return NextResponse.json(newProject, { status: 201 });
+    const project = await createProject(newProject);
+    return NextResponse.json(project, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}` },
@@ -52,24 +48,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const db = await readDB();
-    const projectIndex = db.projects.findIndex((p: Project) => p.id === id);
-
-    if (projectIndex === -1) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
-    }
-
-    // Remove the project
-    db.projects.splice(projectIndex, 1);
-    
-    // Remove associated time entries
-    db.timeEntries = db.timeEntries.filter((entry) => entry.projectId !== id);
-    
-    await writeDB(db);
-
+    await deleteProject(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(

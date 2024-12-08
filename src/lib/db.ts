@@ -23,16 +23,34 @@ export async function readDB(): Promise<DatabaseStructure> {
   try {
     // Create data directory if it doesn't exist
     if (!fs.existsSync(DATA_DIR)) {
-      await fs.promises.mkdir(DATA_DIR, { recursive: true });
+      try {
+        await fs.promises.mkdir(DATA_DIR, { recursive: true });
+      } catch (error) {
+        console.error('Error creating data directory:', error);
+        // If we can't create the directory in production, return initial data
+        if (process.env.NODE_ENV === 'production') {
+          return initializeDB();
+        }
+        throw error;
+      }
     }
 
     if (!fs.existsSync(DB_FILE)) {
       const initialData = initializeDB();
-      const encrypted = CryptoJS.AES.encrypt(
-        JSON.stringify(initialData),
-        ENCRYPTION_KEY
-      ).toString();
-      await fs.promises.writeFile(DB_FILE, encrypted);
+      try {
+        const encrypted = CryptoJS.AES.encrypt(
+          JSON.stringify(initialData),
+          ENCRYPTION_KEY
+        ).toString();
+        await fs.promises.writeFile(DB_FILE, encrypted);
+      } catch (error) {
+        console.error('Error writing initial database:', error);
+        // If we can't write the file in production, return initial data
+        if (process.env.NODE_ENV === 'production') {
+          return initialData;
+        }
+        throw error;
+      }
       return initialData;
     }
 
@@ -51,16 +69,36 @@ export async function writeDB(data: DatabaseStructure): Promise<void> {
   try {
     // Ensure data directory exists
     if (!fs.existsSync(DATA_DIR)) {
-      await fs.promises.mkdir(DATA_DIR, { recursive: true });
+      try {
+        await fs.promises.mkdir(DATA_DIR, { recursive: true });
+      } catch (error) {
+        console.error('Error creating data directory:', error);
+        if (process.env.NODE_ENV === 'production') {
+          return; // Silently fail in production if we can't write
+        }
+        throw error;
+      }
     }
 
     const encrypted = CryptoJS.AES.encrypt(
       JSON.stringify(data),
       ENCRYPTION_KEY
     ).toString();
-    await fs.promises.writeFile(DB_FILE, encrypted);
+    
+    try {
+      await fs.promises.writeFile(DB_FILE, encrypted);
+    } catch (error) {
+      console.error('Error writing to database:', error);
+      if (process.env.NODE_ENV === 'production') {
+        return; // Silently fail in production if we can't write
+      }
+      throw error;
+    }
   } catch (error) {
-    console.error('Error writing to database:', error);
+    console.error('Error in writeDB:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      throw error;
+    }
   }
 }
 

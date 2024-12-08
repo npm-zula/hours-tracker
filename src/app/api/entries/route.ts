@@ -1,4 +1,4 @@
-import { readDB, writeDB } from '@/lib/db';
+import { createTimeEntry, readDB, deleteTimeEntry } from '@/lib/db-supabase';
 import { TimeEntry } from '@/types';
 import { NextResponse } from 'next/server';
 
@@ -16,8 +16,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const newEntry: TimeEntry = await request.json();
-    const db = await readDB();
+    const newEntry: Omit<TimeEntry, 'id' | 'createdAt'> = await request.json();
 
     // Validate entry data
     if (!newEntry.projectId || !newEntry.startTime || !newEntry.endTime) {
@@ -27,20 +26,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate project exists
-    const projectExists = db.projects.some((p) => p.id === newEntry.projectId);
-    if (!projectExists) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
-    }
-
-    // Add the new entry
-    db.timeEntries.push(newEntry);
-    await writeDB(db);
-
-    return NextResponse.json(newEntry, { status: 201 });
+    const entry = await createTimeEntry(newEntry);
+    return NextResponse.json(entry, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to create time entry: ${error instanceof Error ? error.message : 'Unknown error'}` },
@@ -61,20 +48,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const db = await readDB();
-    const entryIndex = db.timeEntries.findIndex((e: TimeEntry) => e.id === id);
-
-    if (entryIndex === -1) {
-      return NextResponse.json(
-        { error: 'Time entry not found' },
-        { status: 404 }
-      );
-    }
-
-    // Remove the entry
-    db.timeEntries.splice(entryIndex, 1);
-    await writeDB(db);
-
+    await deleteTimeEntry(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
