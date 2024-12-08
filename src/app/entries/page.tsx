@@ -2,11 +2,11 @@ import { formatDuration } from '@/lib/utils';
 import { ClockIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { differenceInHours } from 'date-fns';
 import Link from 'next/link';
-import { TimeEntry, Project } from '@/types';
+import type { TimeEntry, Project } from '@/types';
 import { getTimeEntries, getProjects } from '@/lib/db-supabase';
 
 export default async function EntriesPage() {
-  const [timeEntries, projects] = await Promise.all([
+  const [timeEntries, projects]: [TimeEntry[], Project[]] = await Promise.all([
     getTimeEntries(),
     getProjects()
   ]);

@@ -1,11 +1,11 @@
 import { formatCurrency } from '@/lib/utils';
 import { BriefcaseIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { Project } from '@/types';
+import type { Project } from '@/types';
 import { getProjects } from '@/lib/db-supabase';
 
 export default async function ProjectsPage() {
-  const projects = await getProjects();
+  const projects: Project[] = await getProjects();
 
   return (
     <div className="space-y-8">
