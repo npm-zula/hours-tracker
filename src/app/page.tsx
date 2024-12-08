@@ -1,4 +1,4 @@
-import { readDB } from '@/lib/db';
+import { getProjects, getTimeEntries } from '@/lib/db-supabase';
 import { calculateWeeklyTotals, formatCurrency, formatDuration } from '@/lib/utils';
 import { ClockIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 import { differenceInHours } from 'date-fns';
@@ -6,13 +6,16 @@ import Link from 'next/link';
 import { TimeEntry } from '@/types';
 
 export default async function Home() {
-  const db = await readDB();
-  console.log('Time Entries:', db.timeEntries); // Debug log
-  console.log('Projects:', db.projects); // Debug log
+  const [projects, timeEntries] = await Promise.all([
+    getProjects(),
+    getTimeEntries()
+  ]);
+  console.log('Time Entries:', timeEntries); // Debug log
+  console.log('Projects:', projects); // Debug log
   
   const currentWeekTotals = calculateWeeklyTotals(
-    db.timeEntries,
-    db.projects,
+    timeEntries,
+    projects,
     new Date()
   );
   console.log('Weekly Totals:', currentWeekTotals); // Debug log
@@ -27,7 +30,7 @@ export default async function Home() {
     0
   );
 
-  const sortedEntries = [...db.timeEntries]
+  const sortedEntries = [...timeEntries]
     .sort((a: TimeEntry, b: TimeEntry) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
     .slice(0, 5);
 
@@ -72,7 +75,7 @@ export default async function Home() {
           <h2 className="text-lg font-medium mb-4">Projects Overview</h2>
           <div className="space-y-4">
             {currentWeekTotals.map((total) => {
-              const project = db.projects.find((p) => p.id === total.projectId);
+              const project = projects.find((p) => p.id === total.projectId);
               if (!project) return null;
 
               return (
@@ -100,7 +103,7 @@ export default async function Home() {
         <h2 className="text-lg font-medium mb-4">Recent Time Entries</h2>
         <div className="space-y-4">
           {sortedEntries.map((entry) => {
-            const project = db.projects.find((p) => p.id === entry.projectId);
+            const project = projects.find((p) => p.id === entry.projectId);
             if (!project) return null;
 
             return (
