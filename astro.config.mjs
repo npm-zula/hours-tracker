@@ -1,10 +1,9 @@
 import { defineConfig } from 'astro/config';
-// Import /serverless for a Serverless SSR site
-import vercelServerless from '@astrojs/vercel/serverless';
- 
+import tailwind from '@astrojs/tailwind';
+import netlify from '@astrojs/netlify';
+
 export default defineConfig({
+  integrations: [tailwind()],
   output: 'server',
-  adapter: vercelServerless({
-    runtime: 'nodejs20.x'
-  }),
+  adapter: netlify(),
 });
