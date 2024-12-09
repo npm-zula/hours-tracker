@@ -6,9 +6,7 @@ import { revalidatePath } from 'next/cache';
 export async function getProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .abortSignal(new AbortController().signal);
+    .select('*');
 
   if (error) throw error;
   if (!data) return [];
@@ -26,8 +24,7 @@ export async function getTimeEntries(): Promise<TimeEntry[]> {
   const { data, error } = await supabase
     .from('time_entries')
     .select('*')
-    .order('created_at', { ascending: false })
-    .abortSignal(new AbortController().signal);
+    .order('startTime', { ascending: false });
 
   if (error) throw error;
   if (!data) return [];

@@ -16,7 +16,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  return NextResponse.next();
+  // Clone the response
+  const response = NextResponse.next();
+
+  // Add cache-control headers
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  response.headers.set('Surrogate-Control', 'no-store');
+  response.headers.set('Pragma', 'no-cache');
+  
+  return response;
 }
 
 export const config = {

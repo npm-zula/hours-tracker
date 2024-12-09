@@ -4,16 +4,18 @@ import { ClockIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 import { differenceInHours } from 'date-fns';
 import Link from 'next/link';
 import type { TimeEntry } from '@/types';
-import { headers } from 'next/headers';
 
-// Disable all caching
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
+// Update the cache control headers
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export const metadata = {
+  headers: {
+    'Cache-Control': 'no-store, max-age=0'
+  }
+};
 
 export default async function Home() {
-  headers(); // opt out of caching
-  
   const [timeEntries, projects] = await Promise.all([
     getTimeEntries(),
     getProjects()
