@@ -14,11 +14,9 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   headers(); // opt out of caching
   
-  // Add timestamp to force fresh data
-  const timestamp = Date.now();
   const [timeEntries, projects] = await Promise.all([
-    getTimeEntries(timestamp),
-    getProjects(timestamp)
+    getTimeEntries(),
+    getProjects()
   ]);
 
   // Calculate metrics for the current week

@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import { generateId } from './utils';
 import { revalidatePath } from 'next/cache';
 
-export async function getProjects(timestamp?: number): Promise<Project[]> {
+export async function getProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
@@ -22,7 +22,7 @@ export async function getProjects(timestamp?: number): Promise<Project[]> {
   }));
 }
 
-export async function getTimeEntries(timestamp?: number): Promise<TimeEntry[]> {
+export async function getTimeEntries(): Promise<TimeEntry[]> {
   const { data, error } = await supabase
     .from('time_entries')
     .select('*')
