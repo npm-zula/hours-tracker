@@ -1,18 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase environment variables are missing:', {
-    url: !!supabaseUrl,
-    anonKey: !!supabaseAnonKey
-  });
-  throw new Error('Required Supabase environment variables are not configured');
+  throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient<Database>(
-  supabaseUrl,
-  supabaseAnonKey
-); 
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export type TimeEntry = {
+  id: string;
+  project_id: string;
+  description: string;
+  start_time: string;
+  end_time: string | null;
+  created_at: string;
+  project?: {
+    name: string;
+    rate_per_hour?: number;
+  };
+}; 

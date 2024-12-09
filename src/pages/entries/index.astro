@@ -1,0 +1,126 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+import type { TimeEntry } from '../../lib/supabase';
+
+const { data: entries } = await supabase
+  .from('time_entries')
+  .select(`
+    *,
+    project:projects(name, rate_per_hour)
+  `)
+  .order('start_time', { ascending: false });
+
+type MonthlyTotal = {
+  duration: number;
+  earnings: number;
+};
+
+const monthlyTotals = (entries || []).reduce<Record<string, MonthlyTotal>>((acc, entry) => {
+  const startTime = new Date(entry.start_time);
+  const monthKey = `${startTime.getFullYear()}-${String(startTime.getMonth() + 1).padStart(2, '0')}`;
+  
+  if (!acc[monthKey]) {
+    acc[monthKey] = {
+      duration: 0,
+      earnings: 0,
+    };
+  }
+
+  if (entry.end_time) {
+    const endTime = new Date(entry.end_time);
+    const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60); // hours
+    acc[monthKey].duration += duration;
+    
+    if (entry.project?.rate_per_hour) {
+      acc[monthKey].earnings += duration * entry.project.rate_per_hour;
+    }
+  }
+
+  return acc;
+}, {});
+
+const sortedMonths = Object.entries(monthlyTotals).sort((a, b) => b[0].localeCompare(a[0]));
+---
+
+<Layout title="Time Entries | Hours Tracker">
+  <div class="space-y-8">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-primary-800">Time Entries</h1>
+      <a
+        href="/entries/new"
+        class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        New Entry
+      </a>
+    </div>
+
+    <!-- Monthly Totals -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {sortedMonths.map(([month, totals]) => (
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="text-lg font-medium text-primary-800 mb-2">
+            {new Date(month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </h3>
+          <div class="space-y-2">
+            <p class="text-secondary-600">
+              Total Hours: <span class="font-medium">{totals.duration.toFixed(1)}h</span>
+            </p>
+            {totals.earnings > 0 && (
+              <p class="text-secondary-600">
+                Total Earnings: <span class="font-medium">${totals.earnings.toFixed(2)}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Entries Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {entries?.map((entry: TimeEntry) => {
+            const startTime = new Date(entry.start_time);
+            const endTime = entry.end_time ? new Date(entry.end_time) : null;
+            const duration = endTime
+              ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60))
+              : null;
+
+            return (
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {entry.project?.name}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {entry.description}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {startTime.toLocaleString()}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {endTime?.toLocaleString() || 'In Progress'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {duration ? `${Math.floor(duration / 60)}h ${duration % 60}m` : '-'}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout> 

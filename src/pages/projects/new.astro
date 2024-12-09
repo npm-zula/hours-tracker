@@ -1,0 +1,107 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="New Project | Hours Tracker">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold text-primary-800 mb-8">New Project</h1>
+
+    <form
+      class="space-y-6 bg-white p-6 rounded-lg shadow"
+      id="projectForm"
+    >
+      <div class="space-y-2">
+        <label for="name" class="block text-sm font-medium text-gray-700">
+          Project Name
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label for="description" class="block text-sm font-medium text-gray-700">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          rows="3"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        ></textarea>
+      </div>
+
+      <div class="space-y-2">
+        <label for="rate" class="block text-sm font-medium text-gray-700">
+          Hourly Rate
+        </label>
+        <div class="relative mt-1 rounded-md shadow-sm">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <span class="text-gray-500 sm:text-sm">$</span>
+          </div>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            id="rate"
+            name="rate_per_hour"
+            class="block w-full rounded-md border-gray-300 pl-7 focus:border-primary-500 focus:ring-primary-500"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3">
+        <a
+          href="/projects"
+          class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+        >
+          Cancel
+        </a>
+        <button
+          type="submit"
+          class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
+        >
+          Create Project
+        </button>
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<script>
+  const form = document.getElementById('projectForm');
+  
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const project = {
+      name: formData.get('name'),
+      description: formData.get('description') || null,
+      rate_per_hour: formData.get('rate_per_hour') ? Number(formData.get('rate_per_hour')) : null,
+    };
+
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(project),
+      });
+
+      if (response.ok) {
+        window.location.href = '/projects';
+      } else {
+        throw new Error('Failed to create project');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to create project. Please try again.');
+    }
+  });
+</script> 
