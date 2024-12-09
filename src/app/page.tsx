@@ -3,13 +3,19 @@ import { calculateWeeklyTotals, formatCurrency, formatDuration } from '@/lib/uti
 import { ClockIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 import { differenceInHours } from 'date-fns';
 import Link from 'next/link';
-import { TimeEntry } from '@/types';
+import type { TimeEntry } from '@/types';
+import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home() {
-  const [projects, timeEntries] = await Promise.all([
-    getProjects(),
-    getTimeEntries()
+  headers(); // opt out of caching
+  const [timeEntries, projects] = await Promise.all([
+    getTimeEntries(),
+    getProjects()
   ]);
+
   console.log('Time Entries:', timeEntries); // Debug log
   console.log('Projects:', projects); // Debug log
   
