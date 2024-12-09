@@ -24,7 +24,7 @@ export async function getTimeEntries(): Promise<TimeEntry[]> {
   const { data, error } = await supabase
     .from('time_entries')
     .select('*')
-    .order('startTime', { ascending: false });
+    .order('start_time', { ascending: false });
 
   if (error) throw error;
   if (!data) return [];
