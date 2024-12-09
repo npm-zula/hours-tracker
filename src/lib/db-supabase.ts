@@ -1,6 +1,7 @@
 import { Project, TimeEntry } from '@/types';
 import { supabase } from './supabase';
 import { generateId } from './utils';
+import { revalidatePath } from 'next/cache';
 
 export async function getProjects(): Promise<Project[]> {
   const { data, error } = await supabase
@@ -75,6 +76,10 @@ export async function createProject(project: Omit<Project, 'id' | 'createdAt'>):
 
   console.log('Project created successfully:', data);
 
+  // Revalidate affected pages
+  revalidatePath('/');
+  revalidatePath('/projects');
+
   return {
     id: data.id,
     name: data.name,
@@ -117,6 +122,10 @@ export async function createTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt'>
 
   console.log('Time entry created successfully:', data);
 
+  // Revalidate affected pages
+  revalidatePath('/');
+  revalidatePath('/entries');
+
   return {
     id: data.id,
     projectId: data.project_id,
@@ -135,6 +144,10 @@ export async function deleteProject(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) throw error;
+
+  // Revalidate affected pages
+  revalidatePath('/');
+  revalidatePath('/projects');
 }
 
 export async function deleteTimeEntry(id: string): Promise<void> {
@@ -144,4 +157,8 @@ export async function deleteTimeEntry(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) throw error;
+
+  // Revalidate affected pages
+  revalidatePath('/');
+  revalidatePath('/entries');
 } 
