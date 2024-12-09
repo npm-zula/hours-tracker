@@ -53,7 +53,6 @@ export async function createProject(project: Omit<Project, 'id' | 'createdAt'>):
     created_at: new Date().toISOString()
   };
 
-  console.log('Attempting to create project:', newProject);
 
   const { data, error } = await supabase
     .from('projects')
@@ -73,7 +72,6 @@ export async function createProject(project: Omit<Project, 'id' | 'createdAt'>):
     throw new Error('No data returned from Supabase after project creation');
   }
 
-  console.log('Project created successfully:', data);
 
   // Revalidate affected pages
   revalidatePath('/', 'layout');
@@ -100,7 +98,6 @@ export async function createTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt'>
     created_at: new Date().toISOString()
   };
 
-  console.log('Attempting to create time entry:', newEntry);
 
   const { data, error } = await supabase
     .from('time_entries')
@@ -119,8 +116,6 @@ export async function createTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt'>
   if (!data) {
     throw new Error('No data returned from Supabase after time entry creation');
   }
-
-  console.log('Time entry created successfully:', data);
 
   // Revalidate affected pages
   revalidatePath('/', 'layout');

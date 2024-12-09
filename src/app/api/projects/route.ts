@@ -18,7 +18,6 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const newProject: Omit<Project, 'id' | 'createdAt'> = await request.json();
-    console.log('Received project data:', newProject);
 
     // Validate project data
     if (!newProject.name || !newProject.hourlyRate || !newProject.color) {

@@ -11,7 +11,6 @@ export const calculateWeeklyTotals = (
   const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(weekStartDate, { weekStartsOn: 1 });
   
-  console.log('Week range:', { weekStart, weekEnd });
 
   // Initialize totals for all projects
   const projectTotals = new Map<string, { hours: number; rate: number }>();
@@ -30,13 +29,6 @@ export const calculateWeeklyTotals = (
       return;
     }
 
-    console.log('Checking entry:', {
-      entry,
-      entryStart,
-      entryEnd,
-      isWithinWeek: entryStart >= weekStart && entryEnd <= weekEnd
-    });
-
     // Check if entry falls within the week
     if (entryStart >= weekStart && entryEnd <= weekEnd) {
       const hours = differenceInHours(entryEnd, entryStart);
@@ -51,7 +43,6 @@ export const calculateWeeklyTotals = (
     }
   });
 
-  console.log('Project totals:', Array.from(projectTotals.entries()));
 
   // Convert to array format and include all projects with hours
   const result = Array.from(projectTotals.entries()).map(([projectId, { hours, rate }]) => ({

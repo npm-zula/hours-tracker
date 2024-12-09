@@ -5,21 +5,18 @@ import { differenceInHours } from 'date-fns';
 import Link from 'next/link';
 import type { TimeEntry } from '@/types';
 
-// Update the cache control headers
+// Add this segment configuration
+export const runtime = 'edge'; // Optional: Use edge runtime for better performance
+export const preferredRegion = 'auto'; // Optional: Auto-select the closest region
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-export const metadata = {
-  headers: {
-    'Cache-Control': 'no-store, max-age=0'
-  }
-};
 
 export default async function Home() {
   const [timeEntries, projects] = await Promise.all([
     getTimeEntries(),
     getProjects()
   ]);
+
+  
 
   // Calculate metrics for the current week
   const now = new Date();
@@ -38,6 +35,7 @@ export default async function Home() {
     (sum, total) => sum + total.totalHours,
     0
   );
+
 
   const sortedEntries = [...timeEntries]
     .sort((a: TimeEntry, b: TimeEntry) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
