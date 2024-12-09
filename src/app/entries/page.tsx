@@ -4,8 +4,13 @@ import { differenceInHours } from 'date-fns';
 import Link from 'next/link';
 import type { TimeEntry, Project } from '@/types';
 import { getTimeEntries, getProjects } from '@/lib/db-supabase';
+import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function EntriesPage() {
+  headers(); // opt out of caching
   const [timeEntries, projects]: [TimeEntry[], Project[]] = await Promise.all([
     getTimeEntries(),
     getProjects()

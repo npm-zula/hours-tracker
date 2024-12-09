@@ -3,8 +3,13 @@ import { BriefcaseIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import type { Project } from '@/types';
 import { getProjects } from '@/lib/db-supabase';
+import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function ProjectsPage() {
+  headers(); // opt out of caching
   const projects: Project[] = await getProjects();
 
   return (

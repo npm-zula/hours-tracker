@@ -3,7 +3,11 @@ import { supabase } from './supabase';
 import { generateId } from './utils';
 
 export async function getProjects(): Promise<Project[]> {
-  const { data, error } = await supabase.from('projects').select('*');
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .abortSignal(new AbortController().signal);
 
   if (error) throw error;
 
@@ -17,7 +21,11 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 export async function getTimeEntries(): Promise<TimeEntry[]> {
-  const { data, error } = await supabase.from('time_entries').select('*');
+  const { data, error } = await supabase
+    .from('time_entries')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .abortSignal(new AbortController().signal);
 
   if (error) throw error;
 
