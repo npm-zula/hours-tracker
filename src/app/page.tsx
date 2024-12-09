@@ -11,20 +11,25 @@ export const preferredRegion = 'auto'; // Optional: Auto-select the closest regi
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  console.log('Fetching data...');
   const [timeEntries, projects] = await Promise.all([
     getTimeEntries(),
     getProjects()
   ]);
+  console.log('Data fetched:', { 
+    timeEntriesCount: timeEntries.length,
+    projectsCount: projects.length 
+  });
 
-  
-
-  // Calculate metrics for the current week
   const now = new Date();
+  console.log('Current time:', now.toISOString());
+  
   const currentWeekTotals = calculateWeeklyTotals(
     timeEntries,
     projects,
     now
   );
+  console.log('Weekly totals:', currentWeekTotals);
 
   const totalEarnings = currentWeekTotals.reduce(
     (sum, total) => sum + total.totalEarnings,
