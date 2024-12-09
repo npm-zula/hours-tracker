@@ -18,5 +18,8 @@
   "devDependencies": {
     "@astrojs/ts-plugin": "^1.10.4",
     "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

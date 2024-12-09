@@ -5,6 +5,6 @@ import vercelServerless from '@astrojs/vercel/serverless';
 export default defineConfig({
   output: 'server',
   adapter: vercelServerless({
-    runtime: 'nodejs18.x'
+    runtime: 'nodejs20.x'
   }),
 });
