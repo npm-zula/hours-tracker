@@ -3,7 +3,10 @@ interface Props {
   title: string;
 }
 
+import { supabase } from '../lib/supabase';
+
 const { title } = Astro.props;
+const { data: { session } } = await supabase.auth.getSession();
 const appName = "Chronoly";
 ---
 
@@ -18,31 +21,38 @@ const appName = "Chronoly";
     <title>{title}</title>
   </head>
   <body class="bg-primary-50/50 min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <header class="mb-8">
-        <nav class="flex items-center justify-between">
-          <a 
-            href="/" 
-            class="text-2xl font-bold text-primary-800 hover:text-primary-700 transition-colors"
-          >
-            {appName}
-          </a>
-          <div class="flex items-center space-x-6">
+    {session && (
+      <nav class="bg-gray-800 text-white p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+          <div>
             <a 
-              href="/entries" 
-              class="text-secondary-600 hover:text-secondary-900 transition-colors font-medium"
+              href="/" 
+              class="text-2xl font-bold text-primary-800 hover:text-primary-700 transition-colors"
             >
-              Entries
+              {appName}
             </a>
-            <a 
-              href="/projects" 
-              class="text-secondary-600 hover:text-secondary-900 transition-colors font-medium"
-            >
-              Projects
-            </a>
+            <div class="flex items-center space-x-6">
+              <a 
+                href="/entries" 
+                class="text-secondary-600 hover:text-secondary-900 transition-colors font-medium"
+              >
+                Entries
+              </a>
+              <a 
+                href="/projects" 
+                class="text-secondary-600 hover:text-secondary-900 transition-colors font-medium"
+              >
+                Projects
+              </a>
+            </div>
           </div>
-        </nav>
-      </header>
+          <button id="sign-out" class="text-sm bg-red-600 px-4 py-2 rounded hover:bg-red-700">
+            Sign Out
+          </button>
+        </div>
+      </nav>
+    )}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <main class="animate-fadeIn">
         <slot />
       </main>
@@ -118,3 +128,14 @@ const appName = "Chronoly";
     @apply hover:bg-gray-50 transition-colors duration-150;
   }
 </style> 
+
+<script>
+  import { supabase } from '../lib/supabase';
+
+  const signOutButton = document.getElementById('sign-out');
+  
+  signOutButton?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/auth/login';
+  });
+</script> 
