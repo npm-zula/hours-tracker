@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import { generateId } from './utils';
 import { revalidatePath } from 'next/cache';
 
-export async function getProjects(): Promise<Project[]> {
+export async function getProjects(timestamp?: number): Promise<Project[]> {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
@@ -11,6 +11,7 @@ export async function getProjects(): Promise<Project[]> {
     .abortSignal(new AbortController().signal);
 
   if (error) throw error;
+  if (!data) return [];
 
   return data.map(p => ({
     id: p.id,
@@ -21,7 +22,7 @@ export async function getProjects(): Promise<Project[]> {
   }));
 }
 
-export async function getTimeEntries(): Promise<TimeEntry[]> {
+export async function getTimeEntries(timestamp?: number): Promise<TimeEntry[]> {
   const { data, error } = await supabase
     .from('time_entries')
     .select('*')
@@ -29,6 +30,7 @@ export async function getTimeEntries(): Promise<TimeEntry[]> {
     .abortSignal(new AbortController().signal);
 
   if (error) throw error;
+  if (!data) return [];
 
   return data.map(t => ({
     id: t.id,
@@ -77,8 +79,9 @@ export async function createProject(project: Omit<Project, 'id' | 'createdAt'>):
   console.log('Project created successfully:', data);
 
   // Revalidate affected pages
-  revalidatePath('/');
-  revalidatePath('/projects');
+  revalidatePath('/', 'layout');
+  revalidatePath('/projects', 'layout');
+  revalidatePath('/entries', 'layout');
 
   return {
     id: data.id,
@@ -123,8 +126,8 @@ export async function createTimeEntry(entry: Omit<TimeEntry, 'id' | 'createdAt'>
   console.log('Time entry created successfully:', data);
 
   // Revalidate affected pages
-  revalidatePath('/');
-  revalidatePath('/entries');
+  revalidatePath('/', 'layout');
+  revalidatePath('/entries', 'layout');
 
   return {
     id: data.id,
@@ -146,8 +149,8 @@ export async function deleteProject(id: string): Promise<void> {
   if (error) throw error;
 
   // Revalidate affected pages
-  revalidatePath('/');
-  revalidatePath('/projects');
+  revalidatePath('/', 'layout');
+  revalidatePath('/projects', 'layout');
 }
 
 export async function deleteTimeEntry(id: string): Promise<void> {
@@ -159,6 +162,6 @@ export async function deleteTimeEntry(id: string): Promise<void> {
   if (error) throw error;
 
   // Revalidate affected pages
-  revalidatePath('/');
-  revalidatePath('/entries');
+  revalidatePath('/', 'layout');
+  revalidatePath('/entries', 'layout');
 } 

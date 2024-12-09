@@ -6,25 +6,28 @@ import Link from 'next/link';
 import type { TimeEntry } from '@/types';
 import { headers } from 'next/headers';
 
-export const dynamic = 'force-dynamic';
+// Disable all caching
+export const fetchCache = 'force-no-store';
 export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   headers(); // opt out of caching
+  
+  // Add timestamp to force fresh data
+  const timestamp = Date.now();
   const [timeEntries, projects] = await Promise.all([
-    getTimeEntries(),
-    getProjects()
+    getTimeEntries(timestamp),
+    getProjects(timestamp)
   ]);
 
-  console.log('Time Entries:', timeEntries); // Debug log
-  console.log('Projects:', projects); // Debug log
-  
+  // Calculate metrics for the current week
+  const now = new Date();
   const currentWeekTotals = calculateWeeklyTotals(
     timeEntries,
     projects,
-    new Date()
+    now
   );
-  console.log('Weekly Totals:', currentWeekTotals); // Debug log
 
   const totalEarnings = currentWeekTotals.reduce(
     (sum, total) => sum + total.totalEarnings,
