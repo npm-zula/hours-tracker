@@ -1,0 +1,150 @@
+---
+import { supabase } from '../lib/supabase';
+import type { TimeEntry } from '../lib/supabase';
+
+// Get entries for the last 2 weeks
+const twoWeeksAgo = new Date();
+twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+const { data: recentEntries } = await supabase
+  .from('time_entries')
+  .select(`
+    *,
+    project:projects(name, rate_per_hour)
+  `)
+  .gte('start_time', twoWeeksAgo.toISOString())
+  .order('start_time', { ascending: false }) as { data: TimeEntry[] };
+
+// Helper function to get week number
+function getWeekNumber(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+// Helper function to get week start and end dates
+function getWeekDates(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  
+  const weekStart = new Date(d);
+  weekStart.setDate(d.getDate() - day + 1);
+  weekStart.setHours(0, 0, 0, 0);
+  
+  const weekEnd = new Date(d);
+  weekEnd.setDate(d.getDate() + (7 - day));
+  weekEnd.setHours(23, 59, 59, 999);
+  
+  return { weekStart, weekEnd };
+}
+
+// Group entries by week and calculate stats
+const weeklyGroups = (recentEntries || []).reduce((acc, entry) => {
+  const startTime = new Date(entry.start_time);
+  const endTime = entry.end_time ? new Date(entry.end_time) : null;
+  
+  if (!endTime) return acc;
+  
+  const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+  const earnings = entry.project?.rate_per_hour ? duration * entry.project.rate_per_hour : 0;
+
+  const weekNum = getWeekNumber(startTime);
+  const { weekStart, weekEnd } = getWeekDates(startTime);
+  
+  if (!acc[weekNum]) {
+    acc[weekNum] = {
+      totalHours: 0,
+      totalEarnings: 0,
+      entryCount: 0,
+      projectCount: new Set(),
+      weekStart,
+      weekEnd
+    };
+  }
+
+  acc[weekNum].totalHours += duration;
+  acc[weekNum].totalEarnings += earnings;
+  acc[weekNum].entryCount += 1;
+  acc[weekNum].projectCount.add(entry.project_id);
+
+  return acc;
+}, {} as Record<number, {
+  totalHours: number;
+  totalEarnings: number;
+  entryCount: number;
+  projectCount: Set<string>;
+  weekStart: Date;
+  weekEnd: Date;
+}>);
+
+// Convert to array and sort by week number (descending)
+const sortedWeeks = Object.values(weeklyGroups).sort((a, b) => 
+  b.weekStart.getTime() - a.weekStart.getTime()
+);
+
+// Calculate total stats
+const totalStats = sortedWeeks.reduce((acc, week) => ({
+  hours: acc.hours + week.totalHours,
+  earnings: acc.earnings + week.totalEarnings,
+  entries: acc.entries + week.entryCount
+}), { hours: 0, earnings: 0, entries: 0 });
+---
+
+<div class="space-y-8">
+  <!-- Total Summary -->
+  <div class="bg-primary-50 p-6 rounded-lg border border-primary-100">
+    <h3 class="text-lg font-semibold text-primary-800 mb-4">Last 2 Weeks Summary</h3>
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <p class="text-sm text-primary-600">Total Hours</p>
+        <p class="text-2xl font-bold text-primary-900">{totalStats.hours.toFixed(1)}h</p>
+      </div>
+      <div>
+        <p class="text-sm text-primary-600">Total Entries</p>
+        <p class="text-2xl font-bold text-primary-900">{totalStats.entries}</p>
+      </div>
+      <div>
+        <p class="text-sm text-primary-600">Total Earnings</p>
+        <p class="text-2xl font-bold text-green-600">${totalStats.earnings.toFixed(2)}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Breakdown -->
+  <div class="grid gap-4">
+    {sortedWeeks.map((week) => (
+      <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-primary-200 transition-colors">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-medium text-gray-900">
+            Week of {week.weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </h3>
+          <span class="text-sm text-gray-500">
+            {week.projectCount.size} Projects
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <p class="text-sm text-gray-500">Hours</p>
+            <p class="text-lg font-semibold text-primary-600">{week.totalHours.toFixed(1)}h</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Entries</p>
+            <p class="text-lg font-semibold text-primary-600">{week.entryCount}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Earnings</p>
+            <p class="text-lg font-semibold text-green-600">${week.totalEarnings.toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {sortedWeeks.length === 0 && (
+    <div class="text-center py-8 text-gray-500">
+      No entries found in the last two weeks
+    </div>
+  )}
+</div> 

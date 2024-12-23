@@ -10,27 +10,50 @@ if (session) {
 ---
 
 <Layout title="Login">
-  <div class="min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full space-y-8 p-6 bg-white rounded-lg shadow-md">
+  <div class="min-h-[80vh] flex items-center justify-center">
+    <div class="card max-w-md w-full space-y-8">
       <div>
-        <h2 class="text-center text-3xl font-bold">Sign in to your account</h2>
+        <h2 class="text-center text-3xl font-bold text-gray-900">Welcome Back</h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Sign in to your account to continue
+        </p>
       </div>
       <form id="login-form" class="mt-8 space-y-6">
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input id="email" name="email" type="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <div class="space-y-4">
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+            <input 
+              id="email" 
+              name="email" 
+              type="email" 
+              required 
+              class="mt-1 block w-full" 
+              placeholder="you@example.com"
+            >
+          </div>
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              required 
+              class="mt-1 block w-full" 
+              placeholder="••••••••"
+            >
+          </div>
         </div>
+
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-          <input id="password" name="password" type="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-        </div>
-        <div>
-          <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <button type="submit" class="btn btn-primary w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
             Sign in
           </button>
         </div>
       </form>
-      <div id="error-message" class="text-red-500 text-center hidden"></div>
+      <div id="error-message" class="text-red-500 text-center text-sm hidden"></div>
     </div>
   </div>
 </Layout>
