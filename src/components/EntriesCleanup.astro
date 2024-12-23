@@ -1,0 +1,54 @@
+---
+import { supabase } from '../lib/supabase';
+
+// Check if it's the 3rd of the month
+const today = new Date();
+const isThirdOfMonth = today.getDate() === 3;
+
+if (isThirdOfMonth) {
+  // Calculate date ranges
+  const currentDate = new Date();
+  const currentDay = currentDate.getDay() || 7; // Convert Sunday (0) to 7
+  
+  // Start of current week (Monday)
+  const startOfCurrentWeek = new Date(currentDate);
+  startOfCurrentWeek.setDate(currentDate.getDate() - currentDay + 1);
+  startOfCurrentWeek.setHours(0, 0, 0, 0);
+  
+  // Start of 5 weeks ago (to get previous 4 weeks)
+  const fiveWeeksAgo = new Date(startOfCurrentWeek);
+  fiveWeeksAgo.setDate(fiveWeeksAgo.getDate() - (5 * 7));
+
+  // Get entries to clean up
+  const { data: entriesToCleanup } = await supabase
+    .from('time_entries')
+    .select('id, start_time')
+    .gte('start_time', fiveWeeksAgo.toISOString())
+    .lt('start_time', startOfCurrentWeek.toISOString())
+    .is('end_time', null);
+
+  if (entriesToCleanup?.length) {
+    // Update entries with end_time = start_time + 1 hour
+    const updates = entriesToCleanup.map(entry => {
+      const startTime = new Date(entry.start_time);
+      const endTime = new Date(startTime);
+      endTime.setHours(endTime.getHours() + 1);
+      
+      return {
+        id: entry.id,
+        end_time: endTime.toISOString()
+      };
+    });
+
+    // Perform the updates
+    for (const update of updates) {
+      await supabase
+        .from('time_entries')
+        .update({ end_time: update.end_time })
+        .eq('id', update.id);
+    }
+  }
+}
+---
+
+<!-- No visual output needed --> 
