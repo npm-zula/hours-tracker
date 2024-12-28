@@ -4,7 +4,7 @@ interface Props {
 }
 
 import { supabase } from '../lib/supabase';
-import EntriesCleanup from '../components/EntriesCleanup.astro';
+// import EntriesCleanup from '../components/EntriesCleanup.astro';
 
 const { title } = Astro.props;
 const { data: { session } } = await supabase.auth.getSession();
@@ -71,7 +71,7 @@ const appName = "Chronoly";
         &copy; {new Date().getFullYear()} {appName}. All rights reserved.
       </footer>
     </div>
-    <EntriesCleanup />
+    <!-- <EntriesCleanup /> -->
   </body>
 </html>
 
