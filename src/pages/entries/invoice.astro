@@ -1,0 +1,367 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BackButton from '../../components/BackButton.astro';
+import { supabase } from '../../lib/supabase';
+import type { TimeEntry } from '../../lib/supabase';
+
+interface Week {
+  start: Date;
+  end: Date;
+  label: string;
+}
+
+// Get all projects for the filter
+const { data: projects } = await supabase
+  .from('projects')
+  .select('*')
+  .order('name');
+
+// Get the last 12 weeks for the week selector
+const weeks: Week[] = [];
+const today = new Date();
+for (let i = 0; i < 12; i++) {
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - (today.getDay() || 7) - (7 * i));
+  weekStart.setHours(0, 0, 0, 0);
+  
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+  
+  weeks.push({
+    start: weekStart,
+    end: weekEnd,
+    label: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+  });
+}
+---
+
+<Layout title="Generate Invoice">
+  <div class="max-w-4xl mx-auto">
+    <BackButton />
+    <div class="space-y-8">
+      <h1 class="text-2xl font-bold text-primary-800">Generate Invoice</h1>
+
+      <form id="invoice-form" class="space-y-6">
+        <!-- Project Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Project
+          </label>
+          <select
+            name="project_id"
+            class="w-full rounded-lg"
+            required
+          >
+            <option value="">Select a project</option>
+            {projects?.map((project) => (
+              <option value={project.id}>{project.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Week Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Select Weeks
+          </label>
+          <div class="space-y-2 max-h-64 overflow-y-auto p-4 border rounded-lg">
+            {weeks.map((week, index) => (
+              <label class="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="selected_weeks"
+                  value={`${week.start.toISOString()}|${week.end.toISOString()}`}
+                  class="rounded text-primary-600 focus:ring-primary-500"
+                />
+                <span class="text-gray-700">{week.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <!-- Additional Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Invoice Number
+            </label>
+            <input
+              type="text"
+              name="invoice_number"
+              required
+              class="w-full rounded-lg"
+              placeholder="INV-001"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Due Date
+            </label>
+            <input
+              type="date"
+              name="due_date"
+              required
+              class="w-full rounded-lg"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Additional Notes
+          </label>
+          <textarea
+            name="notes"
+            rows="3"
+            class="w-full rounded-lg"
+            placeholder="Any additional notes or payment instructions..."
+          ></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-4">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="window.history.back()"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Generate Invoice
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import type { TimeEntry } from '../../lib/supabase';
+  import { jsPDF } from 'jspdf';
+  import 'jspdf-autotable';
+
+  declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => void;
+      lastAutoTable: { finalY: number };
+    }
+  }
+
+  const form = document.getElementById('invoice-form') as HTMLFormElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const projectId = formData.get('project_id') as string;
+    const selectedWeeks = formData.getAll('selected_weeks') as string[];
+    const invoiceNumber = formData.get('invoice_number') as string;
+    const dueDate = formData.get('due_date') as string;
+    const notes = formData.get('notes') as string;
+
+    if (selectedWeeks.length === 0) {
+      alert('Please select at least one week');
+      return;
+    }
+
+    // Get project details
+    const { data: project } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
+
+    if (!project) {
+      alert('Project not found');
+      return;
+    }
+
+    // Get time entries for selected weeks
+    const entries: TimeEntry[] = [];
+    for (const weekRange of selectedWeeks) {
+      const [start, end] = weekRange.split('|');
+      const { data: weekEntries } = await supabase
+        .from('time_entries')
+        .select('*')
+        .eq('project_id', projectId)
+        .gte('start_time', start)
+        .lte('end_time', end) as { data: TimeEntry[] };
+      
+      if (weekEntries) {
+        entries.push(...weekEntries);
+      }
+    }
+
+    // Sort entries by date
+    entries.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+    // Group entries by week
+    const entriesByWeek = entries.reduce((acc, entry) => {
+      const date = new Date(entry.start_time);
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+
+      const weekKey = `${weekStart.toLocaleDateString('en-US', { 
+        month: 'short',
+        day: 'numeric'
+      })} - ${weekEnd.toLocaleDateString('en-US', { 
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })}`;
+
+      if (!acc[weekKey]) {
+        acc[weekKey] = {
+          entries: [],
+          totalHours: 0,
+          totalAmount: 0
+        };
+      }
+
+      const duration = (new Date(entry.end_time!).getTime() - new Date(entry.start_time).getTime()) / (1000 * 60 * 60);
+      const amount = project.rate_per_hour ? duration * project.rate_per_hour : 0;
+      
+      acc[weekKey].entries.push({
+        ...entry,
+        duration,
+        amount
+      });
+      acc[weekKey].totalHours += duration;
+      acc[weekKey].totalAmount += amount;
+      
+      return acc;
+    }, {} as Record<string, { 
+      entries: (TimeEntry & { duration: number; amount: number; })[],
+      totalHours: number,
+      totalAmount: number
+    }>);
+
+    // Generate PDF
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+
+    // Header
+    doc.setFontSize(24);
+    doc.text('INVOICE', pageWidth / 2, 20, { align: 'center' });
+    
+    // Freelancer Details (Left side)
+    doc.setFontSize(10);
+    doc.text('From:', 20, 35);
+    doc.setFontSize(12);
+    doc.text('Muhammad Aftab', 20, 42);
+    
+    // Company Details (Right side)
+    doc.setFontSize(10);
+    doc.text('To:', pageWidth - 90, 35);
+    doc.setFontSize(12);
+    doc.text('Azul E-com : 90575032', pageWidth - 90, 42);
+    doc.text('Lorentzstraat 33', pageWidth - 90, 49);
+    doc.text('5621ER Eindhoven', pageWidth - 90, 56);
+    doc.text('Netherlands', pageWidth - 90, 63);
+
+    // Invoice Details
+    doc.setFontSize(10);
+    doc.text('Invoice Details:', 20, 75);
+    doc.setFontSize(12);
+    doc.text(`Invoice Number: ${invoiceNumber}`, 20, 82);
+    doc.text(`Due Date: ${new Date(dueDate).toLocaleDateString()}`, 20, 89);
+    doc.text(`Project: ${project.name}`, 20, 96);
+
+    // Time Entries Table (adjusted Y position)
+    const tableData: any[] = [];
+    let totalHours = 0;
+    let totalAmount = 0;
+
+    Object.entries(entriesByWeek).forEach(([weekRange, weekData]) => {
+      // Add week header
+      tableData.push([
+        { content: `Week of ${weekRange}`, colSpan: 5, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }
+      ]);
+
+      // Add entries for the week
+      weekData.entries.forEach(entry => {
+        const entryDate = new Date(entry.start_time).toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+        const startTime = new Date(entry.start_time).toLocaleTimeString('en-US', { 
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const endTime = new Date(entry.end_time!).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        tableData.push([
+          `${entryDate}\n${startTime} - ${endTime}`,
+          entry.description,
+          `${entry.duration.toFixed(2)}h`,
+          `$${project.rate_per_hour}/hr`,
+          `$${entry.amount.toFixed(2)}`
+        ]);
+      });
+
+      // Add weekly subtotal
+      tableData.push([
+        { content: 'Weekly Total:', colSpan: 2, styles: { fontStyle: 'italic' } },
+        `${weekData.totalHours.toFixed(2)}h`,
+        '',
+        `$${weekData.totalAmount.toFixed(2)}`
+      ]);
+
+      // Add spacing
+      tableData.push([{ content: '', colSpan: 5, styles: { cellPadding: 2 } }]);
+
+      totalHours += weekData.totalHours;
+      totalAmount += weekData.totalAmount;
+    });
+
+    // Add grand total
+    tableData.push([
+      { content: 'GRAND TOTAL', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
+      `${totalHours.toFixed(2)}h`,
+      '',
+      `$${totalAmount.toFixed(2)}`
+    ]);
+
+    // Add table
+    doc.autoTable({
+      head: [['Date & Time', 'Description', 'Hours', 'Rate', 'Amount']],
+      body: tableData,
+      startY: 105,
+      theme: 'grid',
+      headStyles: { fillColor: [63, 131, 248] },
+      columnStyles: {
+        0: { cellWidth: 45 },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 30 }
+      },
+      styles: {
+        cellPadding: 3,
+        fontSize: 10
+      }
+    });
+
+    // Add notes if provided
+    if (notes) {
+      const finalY = doc.lastAutoTable.finalY || 70;
+      doc.text('Notes:', 20, finalY + 20);
+      doc.setFontSize(10);
+      doc.text(notes, 20, finalY + 30);
+    }
+
+    // Download the PDF
+    doc.save(`invoice-${invoiceNumber}.pdf`);
+  });
+</script> 

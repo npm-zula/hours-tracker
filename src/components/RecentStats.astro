@@ -4,7 +4,7 @@ import type { TimeEntry } from '../lib/supabase';
 
 // Get entries for the last 2 weeks
 const twoWeeksAgo = new Date();
-twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 13);
 
 const { data: recentEntries } = await supabase
   .from('time_entries')
@@ -118,7 +118,7 @@ const totalStats = sortedWeeks.reduce((acc, week) => ({
       <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-primary-200 transition-colors">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-medium text-gray-900">
-            Week of {week.weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            Week of {week.weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {week.weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </h3>
           <span class="text-sm text-gray-500">
             {week.projectCount.size} Projects
