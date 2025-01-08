@@ -3,191 +3,125 @@ interface Props {
   title: string;
 }
 
-import { supabase } from '../lib/supabase';
-// import EntriesCleanup from '../components/EntriesCleanup.astro';
-
 const { title } = Astro.props;
-const { data: { session } } = await supabase.auth.getSession();
-const appName = "Chronoly";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Simple and elegant time tracking" />
+    <meta name="description" content="Hours Tracker - Track your work hours and generate invoices" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <title>{title} | Hours Tracker</title>
   </head>
-  <body class="bg-primary-50/50 min-h-screen">
-    {session && (
-      <nav class="bg-secondary-800 mb-8 sticky top-0 z-50 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16">
-            <div class="flex items-center">
-              <a href="/" class="flex items-center gap-2 text-white text-xl font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {appName}
-              </a>
-              <div class="ml-10 flex items-baseline space-x-4">
-                <a href="/entries" class="nav-link">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Entries
-                </a>
-                <a href="/projects" class="nav-link">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                  Projects
-                </a>
-              </div>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="text-gray-300 text-sm">
-                {session?.user?.email}
-              </span>
-              <button id="sign-out" class="btn btn-secondary text-sm bg-red-600 hover:bg-red-700 text-white border-red-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Sign Out
-              </button>
-            </div>
+  <body class="h-full bg-gray-50">
+    <!-- Sidebar -->
+    <div class="sticky top-0 inset-x-0 z-20 bg-white border-y px-4 sm:px-6 md:px-8 lg:hidden">
+      <div class="flex items-center py-4">
+        <!-- Navigation Toggle -->
+        <button type="button" class="text-gray-500 hover:text-gray-600" data-hs-overlay="#application-sidebar" aria-controls="application-sidebar" aria-label="Toggle navigation">
+          <span class="sr-only">Toggle Navigation</span>
+          <svg class="w-5 h-5" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+        </button>
+        <!-- End Navigation Toggle -->
+
+        <!-- Logo -->
+        <div class="flex items-center justify-between w-full">
+          <div class="ml-4">
+            <a class="flex-none text-xl font-semibold" href="/" aria-label="Hours Tracker">Hours Tracker</a>
           </div>
         </div>
+        <!-- End Logo -->
+      </div>
+    </div>
+    <!-- End Sidebar -->
+
+    <!-- Sidebar -->
+    <div id="application-sidebar" class="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden fixed top-0 start-0 bottom-0 z-[60] w-64 bg-white border-e border-gray-200 pt-7 pb-10 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300">
+      <div class="px-6">
+        <a class="flex-none text-xl font-semibold" href="/" aria-label="Hours Tracker">Hours Tracker</a>
+      </div>
+
+      <nav class="hs-accordion-group p-6 w-full flex flex-col flex-wrap" data-hs-accordion-always-open>
+        <ul class="space-y-1.5">
+          <li>
+            <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-slate-700 rounded-lg hover:bg-gray-100" href="/">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+
+          <li>
+            <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-slate-700 rounded-lg hover:bg-gray-100" href="/entries">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+              </svg>
+              Time Entries
+            </a>
+          </li>
+
+          <li>
+            <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-slate-700 rounded-lg hover:bg-gray-100" href="/projects">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              Projects
+            </a>
+          </li>
+
+          <li>
+            <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-slate-700 rounded-lg hover:bg-gray-100" href="/entries/invoice">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <path d="M14 2v6h6"></path>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+              Invoices
+            </a>
+          </li>
+        </ul>
       </nav>
-    )}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <main class="animate-fadeIn">
+    </div>
+    <!-- End Sidebar -->
+
+    <!-- Content -->
+    <div class="w-full lg:pl-64">
+      <main class="p-4 sm:p-6 md:p-8">
         <slot />
       </main>
-      <footer class="mt-16 py-8 text-center text-secondary-500 text-sm">
-        &copy; {new Date().getFullYear()} {appName}. All rights reserved.
-      </footer>
     </div>
-    <!-- <EntriesCleanup /> -->
+
+    <!-- Initialize Preline -->
+    <script is:inline src="../../node_modules/preline/dist/preline.js"></script>
+    <script>
+      import 'preline/dist/preline.js';
+    </script>
   </body>
 </html>
 
 <style is:global>
   :root {
-    --color-primary-50: #f0f9ff;
-    --color-primary-100: #e0f2fe;
-    --color-primary-500: #0ea5e9;
-    --color-primary-600: #0284c7;
-    --color-primary-700: #0369a1;
-    --color-secondary-500: #64748b;
-    --color-secondary-600: #475569;
-    --color-secondary-700: #334155;
+    --accent: 136, 58, 234;
+    --accent-light: 224, 204, 250;
+    --accent-dark: 49, 10, 101;
+    --accent-gradient: linear-gradient(
+      45deg,
+      rgb(var(--accent)),
+      rgb(var(--accent-light)) 30%,
+      white 60%
+    );
   }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  /* Enhanced form styles */
-  input[type="text"],
-  input[type="number"],
-  input[type="email"],
-  input[type="password"],
-  input[type="datetime-local"],
-  textarea,
-  select {
-    @apply transition-all duration-200 ease-in-out;
-    @apply border-gray-300 focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50;
-    @apply rounded-lg shadow-sm;
-    @apply px-4 py-2.5;
-    @apply bg-white;
-    @apply text-gray-900;
-    @apply placeholder:text-gray-400;
-  }
-
-  /* Enhanced button styles */
-  .btn {
-    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-lg font-medium;
-    @apply transition-all duration-200 ease-in-out;
-    @apply transform hover:scale-[1.02] active:scale-[0.98];
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
-    @apply gap-2;
-  }
-
-  .btn-primary {
-    @apply bg-primary-600 text-white;
-    @apply hover:bg-primary-700 focus:ring-primary-500;
-    @apply shadow-sm hover:shadow;
-  }
-
-  .btn-secondary {
-    @apply bg-white text-gray-700 border border-gray-300;
-    @apply hover:bg-gray-50 focus:ring-gray-500;
-    @apply shadow-sm hover:shadow;
-  }
-
-  /* Enhanced card styles */
-  .card {
-    @apply bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
-    @apply border border-gray-100;
-    @apply p-6;
-  }
-
-  /* Enhanced table styles */
-  table {
-    @apply w-full divide-y divide-gray-200;
-  }
-
-  th {
-    @apply px-6 py-3.5 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider;
-    @apply bg-gray-50;
-  }
-
-  td {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-600;
-  }
-
-  tr {
-    @apply hover:bg-gray-50 transition-colors duration-150;
-  }
-
-  /* Navigation active state */
-  .nav-link {
-    @apply text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium;
-    @apply transition-colors duration-200;
-  }
-
-  .nav-link.active {
-    @apply bg-primary-700 text-white;
-  }
-</style>
-
-<script>
-  import { supabase } from '../lib/supabase';
-
-  const signOutButton = document.getElementById('sign-out');
-  
-  signOutButton?.addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/auth/login';
-  });
-
-  // Add active state to navigation
-  const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll('.nav-link');
-  
-  navLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === currentPath || (href !== '/' && currentPath.startsWith(href!))) {
-      link.classList.add('active');
-    }
-  });
-</script> 
+</style> 

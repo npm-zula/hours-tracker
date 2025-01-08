@@ -1,6 +1,5 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import TimeInput from '../../components/TimeInput.astro';
 import { supabase } from '../../lib/supabase';
 
 // Fetch projects for the select input
@@ -9,84 +8,233 @@ const { data: projects } = await supabase
   .select('*')
   .order('name');
 
-// Get current time for default value
+// Get current date and time for default values
 const now = new Date();
+const defaultDate = now.toISOString().split('T')[0];
+const defaultTime = now.toTimeString().slice(0, 5);
 ---
 
 <Layout title="New Time Entry">
   <div class="max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold text-primary-800 mb-8">New Time Entry</h1>
-    
-    <form id="entry-form" class="space-y-6">
-      <div>
-        <label for="project" class="block text-sm font-medium text-gray-700">Project</label>
-        <select
-          id="project"
-          name="project_id"
-          required
-          class="mt-1 block w-full rounded-lg"
-        >
-          <option value="">Select a project</option>
-          {projects?.map((project) => (
-            <option value={project.id}>{project.name}</option>
-          ))}
-        </select>
-      </div>
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-800">New Time Entry</h1>
+      <p class="text-sm text-gray-600 mt-1">Create a new time entry for your work</p>
+    </div>
 
-      <div>
-        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
-          id="description"
-          name="description"
-          required
-          rows="3"
-          class="mt-1 block w-full rounded-lg"
-          placeholder="What are you working on?"
-        ></textarea>
-      </div>
+    <!-- Form Card -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+      <form id="entry-form" class="space-y-6">
+        <!-- Project Selection -->
+        <div>
+          <label for="project" class="block text-sm font-medium mb-2 text-gray-800">Project</label>
+          <div class="relative">
+            <select
+              id="project"
+              name="project_id"
+              required
+              class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <option value="">Select a project</option>
+              {projects?.map((project) => (
+                <option value={project.id}>{project.name} {project.rate_per_hour ? `($${project.rate_per_hour}/hr)` : ''}</option>
+              ))}
+            </select>
+            <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+              <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m7 15 5 5 5-5"/>
+                <path d="m7 9 5-5 5 5"/>
+              </svg>
+            </div>
+          </div>
+        </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TimeInput
-          id="start_time"
-          name="start_time"
-          label="Start Time"
-          required={true}
-          defaultValue={now.toISOString()}
-        />
-        
-        <TimeInput
-          id="end_time"
-          name="end_time"
-          label="End Time"
-          required={false}
-        />
-      </div>
+        <!-- Description -->
+        <div>
+          <label for="description" class="block text-sm font-medium mb-2 text-gray-800">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            required
+            rows="3"
+            placeholder="What are you working on?"
+            class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+          ></textarea>
+        </div>
 
-      <div class="flex justify-end gap-4">
-        <a href="/entries" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary">
-          Save Entry
-        </button>
-      </div>
-    </form>
+        <!-- Date Selection -->
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-800">Date</label>
+          <div class="relative">
+            <input
+              type="text"
+              id="date-input"
+              name="date"
+              required
+              value={defaultDate}
+              class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              data-hs-datepicker='{"format": "YYYY-MM-DD"}'
+              placeholder="YYYY-MM-DD"
+            />
+            <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+              <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Start Time -->
+          <div>
+            <label for="start_time" class="block text-sm font-medium mb-2 text-gray-800">Start Time</label>
+            <div class="relative">
+              <input
+                type="time"
+                id="start_time"
+                name="start_time"
+                required
+                value={defaultTime}
+                class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              />
+              <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- End Time -->
+          <div>
+            <label for="end_time" class="block text-sm font-medium mb-2 text-gray-800">End Time (Optional)</label>
+            <div class="relative">
+              <input
+                type="time"
+                id="end_time"
+                name="end_time"
+                class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              />
+              <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Duration Shortcut Buttons -->
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-800">Quick Duration</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none duration-button"
+              data-duration="1"
+            >
+              1 hour
+            </button>
+            <button
+              type="button"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none duration-button"
+              data-duration="2"
+            >
+              2 hours
+            </button>
+            <button
+              type="button"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none duration-button"
+              data-duration="4"
+            >
+              4 hours
+            </button>
+            <button
+              type="button"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none duration-button"
+              data-duration="8"
+            >
+              8 hours
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="mt-8 flex items-center justify-end gap-x-4">
+          <a
+            href="/entries"
+            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/>
+              <path d="m12 5 7 7-7 7"/>
+            </svg>
+            Create Entry
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </Layout>
 
 <script>
   import { supabase } from '../../lib/supabase';
+  import 'preline/preline';
+
+  // Initialize Preline
+  HSStaticMethods.autoInit();
 
   const form = document.getElementById('entry-form') as HTMLFormElement;
+  const dateInput = document.getElementById('date-input') as HTMLInputElement;
+  const startTimeInput = document.getElementById('start_time') as HTMLInputElement;
+  const endTimeInput = document.getElementById('end_time') as HTMLInputElement;
+
+  // Handle duration shortcut buttons
+  document.querySelectorAll('.duration-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const hours = parseInt((button as HTMLElement).dataset.duration || '0');
+      if (!startTimeInput.value) {
+        startTimeInput.value = new Date().toTimeString().slice(0, 5);
+      }
+      
+      const startTime = new Date(`${dateInput.value}T${startTimeInput.value}`);
+      const endTime = new Date(startTime.getTime() + hours * 60 * 60 * 1000);
+      endTimeInput.value = endTime.toTimeString().slice(0, 5);
+    });
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(form);
+    const date = formData.get('date') as string;
+    const startTime = formData.get('start_time') as string;
+    const endTime = formData.get('end_time') as string;
+
     const entry = {
       project_id: formData.get('project_id'),
       description: formData.get('description'),
-      start_time: formData.get('start_time'),
-      end_time: formData.get('end_time') || null
+      start_time: `${date}T${startTime}:00`,
+      end_time: endTime ? `${date}T${endTime}:00` : null
     };
+
+    // Validate end time is after start time if provided
+    if (entry.end_time && new Date(entry.end_time) <= new Date(entry.start_time)) {
+      alert('End time must be after start time');
+      return;
+    }
 
     const { error } = await supabase
       .from('time_entries')

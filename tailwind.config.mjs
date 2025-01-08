@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-	content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+	content: [
+		'./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}',
+		'node_modules/preline/dist/*.js',
+	],
 	theme: {
 		extend: {
 			colors: {
@@ -15,6 +18,7 @@ export default {
 					700: '#0369a1',
 					800: '#075985',
 					900: '#0c4a6e',
+					950: '#082f49',
 				},
 				secondary: {
 					50: '#f8fafc',
@@ -27,9 +31,13 @@ export default {
 					700: '#334155',
 					800: '#1e293b',
 					900: '#0f172a',
+					950: '#020617',
 				}
 			}
 		},
 	},
-	plugins: [],
+	plugins: [
+		require('@tailwindcss/forms'),
+		require('preline/plugin'),
+	],
 }

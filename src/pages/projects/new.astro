@@ -2,78 +2,92 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout title="New Project | Hours Tracker">
-  <div class="max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold text-primary-800 mb-8">New Project</h1>
-
-    <form
-      class="space-y-6 bg-white p-6 rounded-lg shadow"
-      id="projectForm"
-    >
-      <div class="space-y-2">
-        <label for="name" class="block text-sm font-medium text-gray-700">
-          Project Name
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-        />
+<Layout title="New Project">
+  <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div class="max-w-xl mx-auto">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">New Project</h1>
+        <p class="text-sm text-gray-600 mt-1">Create a new project to track your work</p>
       </div>
 
-      <div class="space-y-2">
-        <label for="description" class="block text-sm font-medium text-gray-700">
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows="3"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-        ></textarea>
-      </div>
-
-      <div class="space-y-2">
-        <label for="rate" class="block text-sm font-medium text-gray-700">
-          Hourly Rate
-        </label>
-        <div class="relative mt-1 rounded-md shadow-sm">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <span class="text-gray-500 sm:text-sm">$</span>
+      <!-- Form Card -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+        <form id="projectForm" class="space-y-6">
+          <!-- Project Name -->
+          <div>
+            <label for="name" class="block text-sm font-medium mb-2 text-gray-800">Project Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              placeholder="Enter project name"
+            />
           </div>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            id="rate"
-            name="rate_per_hour"
-            class="block w-full rounded-md border-gray-300 pl-7 focus:border-primary-500 focus:ring-primary-500"
-          />
-        </div>
-      </div>
 
-      <div class="flex justify-end space-x-3">
-        <a
-          href="/projects"
-          class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-        >
-          Cancel
-        </a>
-        <button
-          type="submit"
-          class="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
-        >
-          Create Project
-        </button>
+          <!-- Description -->
+          <div>
+            <label for="description" class="block text-sm font-medium mb-2 text-gray-800">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              placeholder="Describe your project (optional)"
+            ></textarea>
+          </div>
+
+          <!-- Hourly Rate -->
+          <div>
+            <label for="rate" class="block text-sm font-medium mb-2 text-gray-800">Hourly Rate</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none z-20 ps-4">
+                <span class="text-gray-500">$</span>
+              </div>
+              <input
+                type="number"
+                id="rate"
+                name="rate_per_hour"
+                step="0.01"
+                min="0"
+                class="py-3 px-4 ps-8 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                placeholder="0.00"
+              />
+              <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
+                <span class="text-gray-500">per hour</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="mt-8 flex items-center justify-end gap-x-4">
+            <a
+              href="/projects"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Cancel
+            </a>
+            <button
+              type="submit"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+              </svg>
+              Create Project
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   </div>
 </Layout>
 
 <script>
-  const form = document.getElementById('projectForm');
+  const form = document.getElementById('projectForm') as HTMLFormElement;
   
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -94,14 +108,49 @@ import Layout from '../../layouts/Layout.astro';
         body: JSON.stringify(project),
       });
 
-      if (response.ok) {
-        window.location.href = '/projects';
-      } else {
+      if (!response.ok) {
         throw new Error('Failed to create project');
       }
+
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 right-4 bg-green-100 text-green-800 p-4 rounded-lg shadow-lg z-50';
+      successMessage.innerHTML = `
+        <div class="flex items-center gap-x-3">
+          <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          <p class="text-sm font-medium">Project created successfully!</p>
+        </div>
+      `;
+      document.body.appendChild(successMessage);
+
+      // Redirect after a short delay
+      setTimeout(() => {
+        window.location.href = '/projects';
+      }, 1000);
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to create project. Please try again.');
+      
+      // Show error message
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'fixed top-4 right-4 bg-red-100 text-red-800 p-4 rounded-lg shadow-lg z-50';
+      errorMessage.innerHTML = `
+        <div class="flex items-center gap-x-3">
+          <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p class="text-sm font-medium">Failed to create project. Please try again.</p>
+        </div>
+      `;
+      document.body.appendChild(errorMessage);
+
+      // Remove error message after 3 seconds
+      setTimeout(() => {
+        errorMessage.remove();
+      }, 3000);
     }
   });
 </script> 

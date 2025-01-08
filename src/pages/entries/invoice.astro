@@ -1,376 +1,453 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import BackButton from '../../components/BackButton.astro';
 import { supabase } from '../../lib/supabase';
-import type { TimeEntry } from '../../lib/supabase';
 
-interface Week {
-  start: Date;
-  end: Date;
-  label: string;
-}
-
-// Get all projects for the filter
+// Fetch projects for the select input
 const { data: projects } = await supabase
   .from('projects')
   .select('*')
   .order('name');
 
-// Get the last 12 weeks for the week selector
-const weeks: Week[] = [];
-const today = new Date();
-for (let i = 0; i < 12; i++) {
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - (today.getDay() || 7) - (7 * i));
-  weekStart.setHours(0, 0, 0, 0);
-  
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-  
-  weeks.push({
-    start: weekStart,
-    end: weekEnd,
-    label: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-  });
-}
+// Get current date for default value
+const now = new Date();
+const defaultEndDate = now.toISOString().split('T')[0];
+const defaultStartDate = new Date(now.setDate(now.getDate() - 7)).toISOString().split('T')[0];
 ---
 
 <Layout title="Generate Invoice">
-  <div class="max-w-4xl mx-auto">
-    <BackButton />
-    <div class="space-y-8">
-      <h1 class="text-2xl font-bold text-primary-800">Generate Invoice</h1>
+  <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div class="max-w-xl mx-auto">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Generate Invoice</h1>
+        <p class="text-sm text-gray-600 mt-1">Create a professional invoice for your work</p>
+      </div>
 
-      <form id="invoice-form" class="space-y-6">
-        <!-- Project Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Project
-          </label>
-          <select
-            name="project_id"
-            class="w-full rounded-lg"
-            required
-          >
-            <option value="">Select a project</option>
-            {projects?.map((project) => (
-              <option value={project.id}>{project.name}</option>
-            ))}
-          </select>
-        </div>
+      <!-- Form Card -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+        <form id="invoice-form" class="space-y-6">
+          <!-- Project Selection -->
+          <div>
+            <label for="project" class="block text-sm font-medium mb-2 text-gray-800">Project</label>
+            <div class="relative">
+              <select
+                id="project"
+                name="project_id"
+                required
+                class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                <option value="">Select a project</option>
+                {projects?.map((project) => (
+                  <option value={project.id}>{project.name} {project.rate_per_hour ? `($${project.rate_per_hour}/hr)` : ''}</option>
+                ))}
+              </select>
+              <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m7 15 5 5 5-5"/>
+                  <path d="m7 9 5-5 5 5"/>
+                </svg>
+              </div>
+            </div>
+          </div>
 
-        <!-- Week Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Select Weeks
-          </label>
-          <div class="space-y-2 max-h-64 overflow-y-auto p-4 border rounded-lg">
-            {weeks.map((week, index) => (
-              <label class="flex items-center space-x-3">
+          <!-- Date Range -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Start Date -->
+            <div>
+              <label for="start_date" class="block text-sm font-medium mb-2 text-gray-800">Start Date</label>
+              <div class="relative">
                 <input
-                  type="checkbox"
-                  name="selected_weeks"
-                  value={`${week.start.toISOString()}|${week.end.toISOString()}`}
-                  class="rounded text-primary-600 focus:ring-primary-500"
+                  type="text"
+                  id="start_date"
+                  name="start_date"
+                  required
+                  value={defaultStartDate}
+                  class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                  data-hs-datepicker='{"format": "YYYY-MM-DD"}'
+                  placeholder="YYYY-MM-DD"
                 />
-                <span class="text-gray-700">{week.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+                <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                  <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-        <!-- Additional Details -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- End Date -->
+            <div>
+              <label for="end_date" class="block text-sm font-medium mb-2 text-gray-800">End Date</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="end_date"
+                  name="end_date"
+                  required
+                  value={defaultEndDate}
+                  class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                  data-hs-datepicker='{"format": "YYYY-MM-DD"}'
+                  placeholder="YYYY-MM-DD"
+                />
+                <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                  <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Date Ranges -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Invoice Number
-            </label>
-            <input
-              type="text"
-              name="invoice_number"
-              required
-              class="w-full rounded-lg"
-              placeholder="INV-001"
-            />
+            <label class="block text-sm font-medium mb-2 text-gray-800">Quick Select</label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none date-range-button"
+                data-days="7"
+              >
+                Last 7 days
+              </button>
+              <button
+                type="button"
+                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none date-range-button"
+                data-days="14"
+              >
+                Last 14 days
+              </button>
+              <button
+                type="button"
+                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none date-range-button"
+                data-days="30"
+              >
+                Last 30 days
+              </button>
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Due Date
-            </label>
-            <input
-              type="date"
-              name="due_date"
-              required
-              class="w-full rounded-lg"
-            />
+
+          <!-- Invoice Details -->
+          <div class="space-y-4">
+            <div>
+              <label for="invoice_number" class="block text-sm font-medium mb-2 text-gray-800">Invoice Number</label>
+              <input
+                type="text"
+                id="invoice_number"
+                name="invoice_number"
+                required
+                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                placeholder="e.g., INV-001"
+              />
+            </div>
+
+            <div>
+              <label for="due_date" class="block text-sm font-medium mb-2 text-gray-800">Due Date</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="due_date"
+                  name="due_date"
+                  required
+                  class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                  data-hs-datepicker='{"format": "YYYY-MM-DD"}'
+                  placeholder="YYYY-MM-DD"
+                />
+                <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                  <svg class="flex-shrink-0 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="notes" class="block text-sm font-medium mb-2 text-gray-800">Notes</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="3"
+                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                placeholder="Additional notes for the invoice (optional)"
+              ></textarea>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Additional Notes
-          </label>
-          <textarea
-            name="notes"
-            rows="3"
-            class="w-full rounded-lg"
-            placeholder="Any additional notes or payment instructions..."
-          ></textarea>
-        </div>
-
-        <div class="flex justify-end space-x-4">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            onclick="window.history.back()"
-          >
-            Cancel
-          </button>
-          <button type="submit" class="btn btn-primary">
-            Generate Invoice
-          </button>
-        </div>
-      </form>
+          <!-- Form Actions -->
+          <div class="mt-8 flex items-center justify-end gap-x-4">
+            <a
+              href="/entries"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Cancel
+            </a>
+            <button
+              type="submit"
+              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Generate Invoice
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </Layout>
 
 <script>
   import { supabase } from '../../lib/supabase';
-  import type { TimeEntry } from '../../lib/supabase';
-  import { jsPDF } from 'jspdf';
+  import 'preline/preline';
+  import jsPDF from 'jspdf';
   import 'jspdf-autotable';
 
-  declare module 'jspdf' {
-    interface jsPDF {
-      autoTable: (options: any) => void;
-      lastAutoTable: { finalY: number };
-    }
-  }
+  // Initialize Preline
+  HSStaticMethods.autoInit();
 
   const form = document.getElementById('invoice-form') as HTMLFormElement;
+  const startDateInput = document.getElementById('start_date') as HTMLInputElement;
+  const endDateInput = document.getElementById('end_date') as HTMLInputElement;
+
+  // Handle quick date range buttons
+  document.querySelectorAll('.date-range-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const days = parseInt((button as HTMLElement).dataset.days || '7');
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - days);
+      
+      endDateInput.value = end.toISOString().split('T')[0];
+      startDateInput.value = start.toISOString().split('T')[0];
+    });
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(form);
     const projectId = formData.get('project_id') as string;
-    const selectedWeeks = formData.getAll('selected_weeks') as string[];
+    const startDate = formData.get('start_date') as string;
+    const endDate = formData.get('end_date') as string;
     const invoiceNumber = formData.get('invoice_number') as string;
     const dueDate = formData.get('due_date') as string;
     const notes = formData.get('notes') as string;
 
-    if (selectedWeeks.length === 0) {
-      alert('Please select at least one week');
+    // Validate dates
+    if (new Date(endDate) <= new Date(startDate)) {
+      alert('End date must be after start date');
       return;
     }
 
-    // Get project details
-    const { data: project } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
-      .single();
+    try {
+      // Fetch project details
+      const { data: project } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
 
-    if (!project) {
-      alert('Project not found');
-      return;
-    }
+      if (!project) {
+        throw new Error('Project not found');
+      }
 
-    // Get time entries for selected weeks
-    const entries: TimeEntry[] = [];
-    for (const weekRange of selectedWeeks) {
-      const [start, end] = weekRange.split('|');
-      const { data: weekEntries } = await supabase
+      // Fetch time entries
+      const { data: entries } = await supabase
         .from('time_entries')
         .select('*')
         .eq('project_id', projectId)
-        .gte('start_time', start)
-        .lte('end_time', end) as { data: TimeEntry[] };
-      
-      if (weekEntries) {
-        entries.push(...weekEntries);
-      }
-    }
+        .gte('start_time', `${startDate}T00:00:00`)
+        .lte('start_time', `${endDate}T23:59:59`)
+        .order('start_time');
 
-    // Sort entries by date
-    entries.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-
-    // Group entries by week
-    const entriesByWeek = entries.reduce((acc, entry) => {
-      const date = new Date(entry.start_time);
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay());
-      weekStart.setHours(0, 0, 0, 0);
-      
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
-
-      const weekKey = `${weekStart.toLocaleDateString('en-US', { 
-        month: 'short',
-        day: 'numeric'
-      })} - ${weekEnd.toLocaleDateString('en-US', { 
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      })}`;
-
-      if (!acc[weekKey]) {
-        acc[weekKey] = {
-          entries: [],
-          totalHours: 0,
-          totalAmount: 0
-        };
+      if (!entries?.length) {
+        alert('No entries found for the selected date range');
+        return;
       }
 
-      const duration = (new Date(entry.end_time!).getTime() - new Date(entry.start_time).getTime()) / (1000 * 60 * 60);
-      const amount = project.rate_per_hour ? duration * project.rate_per_hour : 0;
+      // Calculate totals
+      const totals = entries.reduce((acc, entry) => {
+        if (entry.end_time) {
+          const duration = (new Date(entry.end_time).getTime() - new Date(entry.start_time).getTime()) / (1000 * 60 * 60);
+          acc.hours += duration;
+          if (project.rate_per_hour) {
+            acc.amount += duration * project.rate_per_hour;
+          }
+        }
+        return acc;
+      }, { hours: 0, amount: 0 });
+
+      // Generate PDF
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 20;
+
+      // Add modern header with accent bar
+      doc.setFillColor(59, 130, 246); // Blue accent color
+      doc.rect(0, 0, pageWidth, 10, 'F');
       
-      acc[weekKey].entries.push({
-        ...entry,
-        duration,
-        amount
-      });
-      acc[weekKey].totalHours += duration;
-      acc[weekKey].totalAmount += amount;
-      
-      return acc;
-    }, {} as Record<string, { 
-      entries: (TimeEntry & { duration: number; amount: number; })[],
-      totalHours: number,
-      totalAmount: number
-    }>);
+      // Add logo placeholder (you can add a real logo later)
+      doc.setFillColor(59, 130, 246);
+      doc.circle(margin + 5, 25, 5, 'F');
+      doc.setFontSize(16);
+      doc.setTextColor(59, 130, 246);
+      doc.text('MA', margin + 15, 28);
 
-    // Generate PDF
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
+      // Add INVOICE text
+      doc.setFontSize(32);
+      doc.setTextColor(40, 40, 40);
+      doc.text('INVOICE', pageWidth - margin - doc.getTextWidth('INVOICE'), 28);
 
-    // Header
-    doc.setFontSize(24);
-    doc.text('INVOICE', pageWidth / 2, 20, { align: 'center' });
-    
-    // Freelancer Details (Left side)
-    doc.setFontSize(10);
-    doc.text('From:', 20, 35);
-    doc.setFontSize(12);
-    doc.text('Muhammad Aftab', 20, 42);
-    
-    // Company Details (Right side)
-    doc.setFontSize(10);
-    doc.text('To:', pageWidth - 90, 35);
-    doc.setFontSize(12);
-    doc.text('Azul E-com : 90575032', pageWidth - 90, 42);
-    doc.text('Lorentzstraat 33', pageWidth - 90, 49);
-    doc.text('5621ER Eindhoven', pageWidth - 90, 56);
-    doc.text('Netherlands', pageWidth - 90, 63);
-
-    // Invoice Details
-    doc.setFontSize(10);
-    doc.text('Invoice Details:', 20, 75);
-    doc.setFontSize(12);
-    doc.text(`Invoice Number: ${invoiceNumber}`, 20, 82);
-    doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-US', { 
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    })}`, 20, 89);
-    doc.text(`Due Date: ${new Date(dueDate).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    })}`, 20, 96);
-    doc.text(`Project: ${project.name}`, 20, 103);
-
-    // Time Entries Table (adjusted Y position)
-    const tableData: any[] = [];
-    let totalHours = 0;
-    let totalAmount = 0;
-
-    Object.entries(entriesByWeek).forEach(([weekRange, weekData]) => {
-      // Add week header
-      tableData.push([
-        { content: `Week of ${weekRange}`, colSpan: 5, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }
-      ]);
-
-      // Add entries for the week
-      weekData.entries.forEach(entry => {
-        const entryDate = new Date(entry.start_time).toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric'
-        });
-        const startTime = new Date(entry.start_time).toLocaleTimeString('en-US', { 
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        const endTime = new Date(entry.end_time!).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-
-        tableData.push([
-          `${entryDate}\n${startTime} - ${endTime}`,
-          entry.description,
-          `${entry.duration.toFixed(2)}h`,
-          `$${project.rate_per_hour}/hr`,
-          `$${entry.amount.toFixed(2)}`
-        ]);
-      });
-
-      // Add weekly subtotal
-      tableData.push([
-        { content: 'Weekly Total:', colSpan: 2, styles: { fontStyle: 'italic' } },
-        `${weekData.totalHours.toFixed(2)}h`,
-        '',
-        `$${weekData.totalAmount.toFixed(2)}`
-      ]);
-
-      // Add spacing
-      tableData.push([{ content: '', colSpan: 5, styles: { cellPadding: 2 } }]);
-
-      totalHours += weekData.totalHours;
-      totalAmount += weekData.totalAmount;
-    });
-
-    // Add grand total
-    tableData.push([
-      { content: 'GRAND TOTAL', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
-      `${totalHours.toFixed(2)}h`,
-      '',
-      `$${totalAmount.toFixed(2)}`
-    ]);
-
-    // Add table
-    doc.autoTable({
-      head: [['Date & Time', 'Description', 'Hours', 'Rate', 'Amount']],
-      body: tableData,
-      startY: 112,
-      theme: 'grid',
-      headStyles: { fillColor: [63, 131, 248] },
-      columnStyles: {
-        0: { cellWidth: 45 },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 30 }
-      },
-      styles: {
-        cellPadding: 3,
-        fontSize: 10
-      }
-    });
-
-    // Add notes if provided
-    if (notes) {
-      const finalY = doc.lastAutoTable.finalY || 70;
-      doc.text('Notes:', 20, finalY + 20);
+      // Add invoice details (right-aligned)
       doc.setFontSize(10);
-      doc.text(notes, 20, finalY + 30);
-    }
+      doc.setTextColor(90, 90, 90);
+      const invoiceDetailY = 45;
+      doc.text(`Invoice Number: ${invoiceNumber}`, pageWidth - margin, invoiceDetailY, { align: 'right' });
+      doc.text(`Date: ${new Date().toLocaleDateString('en-US', { 
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`, pageWidth - margin, invoiceDetailY + 5, { align: 'right' });
+      doc.text(`Due Date: ${new Date(dueDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`, pageWidth - margin, invoiceDetailY + 10, { align: 'right' });
 
-    // Download the PDF
-    doc.save(`invoice-${invoiceNumber}.pdf`);
+      // Add from section
+      const fromY = 70;
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 40);
+      doc.text('From', margin, fromY);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Muhammad Aftab', margin, fromY + 8);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text('Azul E-com : 90575032', margin, fromY + 16);
+      doc.text('Lorentzstraat 33', margin, fromY + 22);
+      doc.text('5621ER Eindhoven, Netherlands', margin, fromY + 28);
+
+      // Add project details in a box
+      const projectY = 115;
+      doc.setDrawColor(220, 220, 220);
+      doc.setFillColor(250, 250, 250);
+      doc.roundedRect(margin, projectY, pageWidth - (margin * 2), 25, 3, 3, 'FD');
+      
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 40);
+      doc.text('Project Details', margin + 10, projectY + 10);
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`${project.name}${project.description ? ` - ${project.description}` : ''}`, margin + 10, projectY + 18);
+
+      // Add time entries table with modern styling
+      const tableStartY = projectY + 35;
+      doc.autoTable({
+        startY: tableStartY,
+        head: [['Date', 'Time', 'Description', 'Hours', 'Amount']],
+        body: entries.map(entry => {
+          const startTime = new Date(entry.start_time);
+          const endTime = entry.end_time ? new Date(entry.end_time) : null;
+          const duration = endTime
+            ? (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60)
+            : 0;
+          const amount = project.rate_per_hour ? duration * project.rate_per_hour : 0;
+
+          return [
+            startTime.toLocaleDateString('en-US', { 
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            }),
+            `${startTime.toLocaleTimeString('en-US', { 
+              hour: '2-digit',
+              minute: '2-digit'
+            })} - ${endTime?.toLocaleTimeString('en-US', { 
+              hour: '2-digit',
+              minute: '2-digit'
+            }) || 'In Progress'}`,
+            entry.description,
+            `${duration.toFixed(2)}h`,
+            project.rate_per_hour ? `$${amount.toFixed(2)}` : '-'
+          ];
+        }),
+        foot: [[
+          { content: 'Total', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
+          { content: `${totals.hours.toFixed(2)}h`, styles: { fontStyle: 'bold' } },
+          { content: `$${totals.amount.toFixed(2)}`, styles: { fontStyle: 'bold' } }
+        ]],
+        theme: 'plain',
+        headStyles: {
+          fillColor: [59, 130, 246],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold',
+          halign: 'left'
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: 90,
+          lineColor: [240, 240, 240]
+        },
+        footStyles: {
+          fontSize: 10,
+          fillColor: [250, 250, 250],
+          textColor: 40,
+          lineColor: [240, 240, 240]
+        },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 'auto' },
+          3: { cellWidth: 25, halign: 'right' },
+          4: { cellWidth: 30, halign: 'right' }
+        },
+        margin: { left: margin, right: margin },
+        alternateRowStyles: {
+          fillColor: [252, 252, 252]
+        }
+      });
+
+      // Add notes section if provided
+      if (notes) {
+        const finalY = (doc as any).lastAutoTable.finalY + 15;
+        doc.setFontSize(11);
+        doc.setTextColor(40, 40, 40);
+        doc.setFont(undefined, 'bold');
+        doc.text('Notes', margin, finalY);
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(90, 90, 90);
+        
+        // Split notes into lines to handle long text
+        const splitNotes = doc.splitTextToSize(notes, pageWidth - (margin * 2));
+        doc.text(splitNotes, margin, finalY + 8);
+      }
+
+      // Add footer
+      const footerY = pageHeight - 20;
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Thank you for your business!', pageWidth / 2, footerY, { align: 'center' });
+
+      // Download the PDF
+      doc.save(`invoice-${invoiceNumber}.pdf`);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to generate invoice. Please try again.');
+    }
   });
 </script> 
