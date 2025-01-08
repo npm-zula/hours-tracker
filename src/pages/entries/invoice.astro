@@ -271,8 +271,17 @@ for (let i = 0; i < 12; i++) {
     doc.text('Invoice Details:', 20, 75);
     doc.setFontSize(12);
     doc.text(`Invoice Number: ${invoiceNumber}`, 20, 82);
-    doc.text(`Due Date: ${new Date(dueDate).toLocaleDateString()}`, 20, 89);
-    doc.text(`Project: ${project.name}`, 20, 96);
+    doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-US', { 
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })}`, 20, 89);
+    doc.text(`Due Date: ${new Date(dueDate).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })}`, 20, 96);
+    doc.text(`Project: ${project.name}`, 20, 103);
 
     // Time Entries Table (adjusted Y position)
     const tableData: any[] = [];
@@ -337,7 +346,7 @@ for (let i = 0; i < 12; i++) {
     doc.autoTable({
       head: [['Date & Time', 'Description', 'Hours', 'Rate', 'Amount']],
       body: tableData,
-      startY: 105,
+      startY: 112,
       theme: 'grid',
       headStyles: { fillColor: [63, 131, 248] },
       columnStyles: {
